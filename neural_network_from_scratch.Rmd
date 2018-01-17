@@ -1,0 +1,67 @@
+---
+title: "NN From Scratch"
+output: html_notebook
+---
+```{r}
+sigmoid <- function (z) {
+  res <- 1 / (1 + exp(-1*z))
+  return(res)
+}
+
+relu <- function (z) {
+  res <- max(0,z)
+  return(res)
+}
+
+tanh <- function (z) {
+  res <- (exp(z) - exp(-1*z)) / (exp(z) + exp(-1*z))
+}
+```
+
+```{r}
+node <- function (w, b, x, FUN = sigmoid) {
+  z <- w * x + b
+  node_activation(z, FUN)
+}
+
+node_activation <- function(z, FUN){
+  y <- FUN(z)
+  return(y)
+}
+
+```
+
+```{r}
+layer <- function (row, FUN = sigmoid) {
+  res <- c()
+  for(i in row) {
+    print(i)
+    res[i] <- node(.1, .05, i, FUN)
+  }
+  
+  return(res)
+}
+```
+
+
+```{r}
+network <- function (df, FUN = sigmoid) {
+  res <- matrix(ncol=ncol(df), nrow=nrow(df))
+  for(i in 1:nrow(df)){
+    res[i,] <- layer(df[i,], tanh)
+  }
+  return(data.frame(res))
+}
+```
+
+```{r}
+N  <- 100
+df  <- data.frame(x1 = rnorm(N), x2 = rnorm(N), x3 = rnorm(N), x4 = rnorm(N), x5 = rnorm(N))
+
+row<-c(0.00005, 0.08976, 1.07654, 0.89765)
+
+layer(row, tanh)
+
+network(df, tanh)
+```
+
