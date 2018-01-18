@@ -2,6 +2,14 @@
 title: "NN From Scratch"
 output: html_notebook
 ---
+
+```{r}
+start <- 0
+end <- 0
+```
+
+
+**Various activation funtions
 ```{r}
 sigmoid <- function (z) {
   res <- 1 / (1 + exp(-1*z))
@@ -19,6 +27,14 @@ tanh <- function (z) {
 ```
 
 ```{r}
+dropout <- function (layer_output) {
+  z <- rbinom(nrow(layer_output), 1, 0.5)
+  return(z * layer_output)
+}
+```
+
+**The two parts of each node
+```{r}
 node <- function (w, b, x, FUN = sigmoid) {
   z <- w * x + b
   node_activation(z, FUN)
@@ -31,37 +47,68 @@ node_activation <- function(z, FUN){
 
 ```
 
+
+**Layer of a NN
 ```{r}
-layer <- function (row, FUN = sigmoid) {
+layer_node <- function (row, FUN = sigmoid) {
   res <- c()
-  for(i in row) {
-    print(i)
-    res[i] <- node(.1, .05, i, FUN)
+  for(i in 1:length(row)) {
+    ##cludge to take into account dropout being implemented, this needs to change
+    if (row[i] == 0) {
+      res[i] = 0
+    } else {
+      res[i] <- node(.1, .05, as.double(row[i]), FUN)
+    }
   }
   
-  return(res)
+  return(sum(res))
 }
-```
 
-
-```{r}
-network <- function (df, FUN = sigmoid) {
-  res <- matrix(ncol=ncol(df), nrow=nrow(df))
+##right here is where our output changes to a 1 column dataframe, will need to be transposed to list for future layers
+layer <- function (df, FUN = sigmoid) {
+  start <- Sys.time()
+  res <- matrix(ncol=1, nrow=nrow(df))
   for(i in 1:nrow(df)){
-    res[i,] <- layer(df[i,], tanh)
+    res[i,] <- layer_node(df[i,], FUN)
   }
+  end <- Sys.time()
+  print(end - start)
   return(data.frame(res))
 }
 ```
 
+
+**Subsequent layers after layer 0
 ```{r}
-N  <- 100
+##There is an issue with the way regularization is implemented here, needs to be done in such a way that it is applied after the return from layer.  This is currently implemented for dropout with the conditional inside for the for loop in the layer_node function
+layer_after_0 <- function (df, nodes, FUN = sigmoid, REG = NULL) {
+  
+  res <- matrix(ncol=nrow(df), nrow=nodes)
+  for (i in 1:nodes) {
+    if (is.null(REG)) {
+      df_reg <- df  
+    } else {
+      df_reg <- REG(df)
+    }
+    df_t <- t(df_reg)
+    res[i,] <- df_t
+  }
+  return(layer(res, FUN))
+}
+```
+
+
+**Define random df and send to network fn
+```{r echo=TRUE}
+N  <- 1000
 df  <- data.frame(x1 = rnorm(N), x2 = rnorm(N), x3 = rnorm(N), x4 = rnorm(N), x5 = rnorm(N))
 
-row<-c(0.00005, 0.08976, 1.07654, 0.89765)
+layer_0 <- layer(df, sigmoid)
 
-layer(row, tanh)
+layer_1 <- layer_after_0(layer_0, 100, sigmoid, dropout)
 
-network(df, tanh)
+layer_2 <- layer_after_0(layer_1, 10, tanh, dropout)
+
+layer_3 <- layer_after_0(layer_2, 1, relu)
 ```
 
