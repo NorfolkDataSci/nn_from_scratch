@@ -3,12 +3,6 @@ title: "NN From Scratch"
 output: html_notebook
 ---
 
-```{r}
-start <- 0
-end <- 0
-```
-
-
 **Various activation funtions
 ```{r}
 sigmoid <- function (z) {
@@ -26,6 +20,8 @@ tanh <- function (z) {
 }
 ```
 
+
+**Regularization functions
 ```{r}
 dropout <- function (layer_output) {
   z <- rbinom(nrow(layer_output), 1, 0.5)
@@ -46,7 +42,6 @@ node_activation <- function(z, FUN){
 }
 
 ```
-
 
 **Layer of a NN
 ```{r}
@@ -77,38 +72,71 @@ layer <- function (df, FUN = sigmoid) {
 }
 ```
 
-
 **Subsequent layers after layer 0
 ```{r}
 ##There is an issue with the way regularization is implemented here, needs to be done in such a way that it is applied after the return from layer.  This is currently implemented for dropout with the conditional inside for the for loop in the layer_node function
-layer_after_0 <- function (df, nodes, FUN = sigmoid, REG = NULL) {
+layer_after_0 <- function (df, nodes, FUN = sigmoid) {
   
   res <- matrix(ncol=nrow(df), nrow=nodes)
   for (i in 1:nodes) {
-    if (is.null(REG)) {
-      df_reg <- df  
-    } else {
-      df_reg <- REG(df)
-    }
-    df_t <- t(df_reg)
+    df_t <- t(df)
     res[i,] <- df_t
   }
   return(layer(res, FUN))
 }
 ```
 
+**Need to implement loss and cost
+```{r}
 
-**Define random df and send to network fn
-```{r echo=TRUE}
-N  <- 1000
-df  <- data.frame(x1 = rnorm(N), x2 = rnorm(N), x3 = rnorm(N), x4 = rnorm(N), x5 = rnorm(N))
-
-layer_0 <- layer(df, sigmoid)
-
-layer_1 <- layer_after_0(layer_0, 100, sigmoid, dropout)
-
-layer_2 <- layer_after_0(layer_1, 10, tanh, dropout)
-
-layer_3 <- layer_after_0(layer_2, 1, relu)
 ```
+
+**Need to implement weights and bias df based on shape of input df
+```{r}
+
+```
+
+**Need to implement random initialization
+```{r}
+
+```
+
+**Need to implement backprop
+```{r}
+
+```
+
+**Define random df for testing
+```{r echo=TRUE}
+N  <- 100
+df  <- data.frame(x1 = rnorm(N), x2 = rnorm(N), x3 = rnorm(N), x4 = rnorm(N), x5 = rnorm(N))
+```
+
+**Implementation of a simple forward prop, with all observations and 5 epochs
+```{r}
+return <- as.data.frame(matrix(ncol=5, nrow=nrow(df)))
+epochs <- 5
+
+for (j in epochs:1) {
+  for (i in 1:nrow(df)) {
+    layer_0 <- layer(df[i,], sigmoid)
+
+    layer_0_reg <- dropout(layer_0)
+
+    layer_1 <- layer_after_0(layer_0_reg, 100, sigmoid)
+
+    layer_1_reg <- dropout(layer_1)
+
+    layer_2 <- layer_after_0(layer_1_reg, 10, tanh)
+
+    layer_3 <- layer_after_0(layer_2, 1, relu)
+  
+    return[i,j] <- layer_3
+  }  
+}
+```
+
+
+
+
 
