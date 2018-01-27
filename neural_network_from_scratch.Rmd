@@ -45,14 +45,14 @@ node_activation <- function(z, FUN){
 
 **Layer of a NN
 ```{r}
-layer_node <- function (row, FUN = sigmoid) {
+layer_node <- function (row, FUN = sigmoid, weights, bias) {
   res <- c()
   for(i in 1:length(row)) {
     ##cludge to take into account dropout being implemented, this needs to change
     if (row[i] == 0) {
       res[i] = 0
     } else {
-      res[i] <- node(.1, .05, as.double(row[i]), FUN)
+      res[i] <- node(weights[i,], bias, as.double(row[i]), FUN)
     }
   }
   
@@ -60,11 +60,11 @@ layer_node <- function (row, FUN = sigmoid) {
 }
 
 ##right here is where our output changes to a 1 column dataframe, will need to be transposed to list for future layers
-layer <- function (df, FUN = sigmoid) {
+layer <- function (df, FUN = sigmoid, weights, bias) {
   start <- Sys.time()
   res <- matrix(ncol=1, nrow=nrow(df))
   for(i in 1:nrow(df)){
-    res[i,] <- layer_node(df[i,], FUN)
+    res[i,] <- layer_node(df[i,], FUN, weights, bias)
   }
   end <- Sys.time()
   print(end - start)
@@ -75,14 +75,14 @@ layer <- function (df, FUN = sigmoid) {
 **Subsequent layers after layer 0
 ```{r}
 ##There is an issue with the way regularization is implemented here, needs to be done in such a way that it is applied after the return from layer.  This is currently implemented for dropout with the conditional inside for the for loop in the layer_node function
-layer_after_0 <- function (df, nodes, FUN = sigmoid) {
+layer_after_0 <- function (df, nodes, FUN = sigmoid, weights, bias) {
   
   res <- matrix(ncol=nrow(df), nrow=nodes)
   for (i in 1:nodes) {
     df_t <- t(df)
     res[i,] <- df_t
   }
-  return(layer(res, FUN))
+  return(layer(res, FUN, weights, bias))
 }
 ```
 
@@ -93,12 +93,19 @@ layer_after_0 <- function (df, nodes, FUN = sigmoid) {
 
 **Need to implement weights and bias df based on shape of input df
 ```{r}
-
+weights_bias_df <- function(df) {
+  return(data.frame(x1 = numeric(nrow(df) + 1)))
+}
 ```
 
 **Need to implement random initialization
 ```{r}
-
+rand_init <- function(df, bias_start) {
+  K <- nrow(df)
+  res <- data.frame(rnorm(K))
+  res[1,] <- bias_start
+  return(res)
+}
 ```
 
 **Need to implement backprop
@@ -117,19 +124,26 @@ df  <- data.frame(x1 = rnorm(N), x2 = rnorm(N), x3 = rnorm(N), x4 = rnorm(N), x5
 return <- as.data.frame(matrix(ncol=5, nrow=nrow(df)))
 epochs <- 5
 
+## This is set up so that we can learn these weights and biases once the backprop function is implemented, for now I am stripping out bias and weights into seperate dfs
+weights_bias <- rand_init(weights_bias_df(df), 0.05)
+bias <- weights_bias[1,]
+ws <- weights_bias[2:nrow(weights_bias),]
+
+weights <- rand_init(weights)
+
 for (j in epochs:1) {
   for (i in 1:nrow(df)) {
-    layer_0 <- layer(df[i,], sigmoid)
+    layer_0 <- layer(df[i,], sigmoid, weights, bias)
 
     layer_0_reg <- dropout(layer_0)
 
-    layer_1 <- layer_after_0(layer_0_reg, 100, sigmoid)
+    layer_1 <- layer_after_0(layer_0_reg, 100, sigmoid, weights, bias)
 
     layer_1_reg <- dropout(layer_1)
 
-    layer_2 <- layer_after_0(layer_1_reg, 10, tanh)
+    layer_2 <- layer_after_0(layer_1_reg, 10, tanh, weights, bias)
 
-    layer_3 <- layer_after_0(layer_2, 1, relu)
+    layer_3 <- layer_after_0(layer_2, 1, relu, weights, bias)
   
     return[i,j] <- layer_3
   }  
