@@ -3,6 +3,25 @@ title: "NN From Scratch"
 output: html_notebook
 ---
 
+**Get data set
+```{r echo=TRUE}
+data("iris")
+
+iris_sub <- iris[ which(iris$Species == "setosa" | iris$Species == "virginica"), ]
+
+df_x  <- iris_sub[,(1:4)]
+
+df_y <- as.data.frame(iris_sub[,5])
+
+df_y <- as.data.frame(df_y$`iris_sub[, 5]` == "setosa")
+```
+
+**Hyperparameters
+```{r}
+learning_rate <- 0.008
+epochs <- 5
+```
+
 **Various activation funtions
 ```{r}
 sigmoid <- function (z) {
@@ -19,7 +38,6 @@ tanh <- function (z) {
   res <- (exp(z) - exp(-1*z)) / (exp(z) + exp(-1*z))
 }
 ```
-
 
 **Regularization functions
 ```{r}
@@ -76,31 +94,30 @@ layer_after_0 <- function (df, nodes, FUN = sigmoid, weights, bias) {
 }
 ```
 
-**Need to implement loss and cost
+**Loss and Cost
 ```{r}
 loss <- function(y_hat, y){
-  y_hat <- as.data.frame(return[,c(1)])
-  y <- df_y
-  for (i in 1:nrow(y_hat)) {
-   res <- y[1,]*log(y_hat[1,])+(1-y[1,])*log(1-y_hat[1,])
-  }
+  res <- 1 / 2 * (y_hat - y)^2
+  
   return(res)
 }
 
 cost <- function(l){
-  res <- 1/nrow(l)*sum(l)
+  l <- as.data.frame(l)
+  res <- 1 / nrow(l) * colSums(l)
   return(res)
 }
 ```
 
-**Need to implement weights and bias df based on shape of input df
+
+**Build weights and bias df
 ```{r}
 weights_bias_df <- function(df) {
   return(data.frame(x1 = numeric(nrow(df) + 1)))
 }
 ```
 
-**Need to implement random initialization
+**Random Initialization
 ```{r}
 rand_init <- function(df, bias_start) {
   K <- nrow(df)
@@ -115,28 +132,16 @@ rand_init <- function(df, bias_start) {
 
 ```
 
-
+**Update weights function
 ```{r}
-update <- function(weight, bias, change) {
-  
+update <- function(weights, change, learn_rate) {
+  weights <- learn_rate*(weights - change)
 }
-```
-
-**Get data set
-```{r echo=TRUE}
-data("iris")
-
-iris_sub <- iris[ which(iris$Species == "setosa" | iris$Species == "virginica"), ]
-
-df_x  <- iris_sub[,(1:4)]
-
-df_y <- as.data.frame(iris_sub[,5])
 ```
 
 **Implementation of a simple forward prop, with all observations and 5 epochs
 ```{r}
 return <- as.data.frame(matrix(ncol=5, nrow=nrow(df_x)))
-epochs <- 5
 
 ## This is set up so that we can learn these weights and biases once the backprop function is implemented, for now I am stripping out bias and weights into seperate dfs
 weights_bias <- rand_init(weights_bias_df(df_x), 0.05)
@@ -147,7 +152,7 @@ for (j in epochs:1) {
   for (i in 1:nrow(df_x)) {
     layer_0 <- layer(df_x[i,], sigmoid, weights, bias)
   
-    layer_1 <- layer_after_0(layer_0, 100, sigmoid, weights, bias)
+    layer_1 <- layer_after_0(layer_0, 100, relu, weights, bias)
 
     layer_1_reg <- dropout(layer_1)
 
@@ -155,10 +160,14 @@ for (j in epochs:1) {
     
     layer_2_reg <- dropout(layer_2)
 
-    layer_3 <- layer_after_0(layer_2_reg, 1, relu, weights, bias)
+    layer_3 <- layer_after_0(layer_2_reg, 1, sigmoid, weights, bias)
   
-    return[i,j] <- layer_3
+    return[i,j] <- loss(layer_3, df_y[i,])
   }
+  
+  c <- cost(return[,j])
+  
+  weights <- update(weights, c, learning_rate)
 }
 ```
 
