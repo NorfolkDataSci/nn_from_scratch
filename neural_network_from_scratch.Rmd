@@ -20,9 +20,10 @@ df_y <- as.data.frame(df_y$`iris_sub[, 5]` == "setosa")
 ```{r}
 learning_rate <- 0.008
 epochs <- 5
+bias <- 0.005
 ```
 
-**Various activation funtions
+**Various activation functions
 ```{r}
 sigmoid <- function (z) {
   res <- 1 / (1 + exp(-1*z))
@@ -49,11 +50,17 @@ dropout <- function (layer_output) {
 
 **The two parts of each node
 ```{r}
+# IN: 1x1, 1x1, 1x1
+# OUT: 1x1
 node <- function (w, b, x, FUN = sigmoid) {
   z <- w * x + b
+  # IN: 1x1
+  # OUT: 1x1
   node_activation(z, FUN)
 }
 
+# IN: 1x1
+# OUT: 1x1
 node_activation <- function(z, FUN){
   y <- FUN(z)
   return(y)
@@ -62,35 +69,29 @@ node_activation <- function(z, FUN){
 
 **Layer of a NN
 ```{r}
-layer_node <- function (row, FUN = sigmoid, weights, bias) {
+# IN: 1x4, 1x1, 1x1
+# OUT: 1x1
+layer_node <- function (vals, FUN = sigmoid, weight_df, bias) {
   res <- c()
-  for(i in 1:length(row)) {
-    res[i] <- node(weights[i], bias, as.double(row[i]), FUN)
+  for(i in 1:ncol(vals)) {
+    # IN: 1x1, 1x1, 1x1
+    # OUT: 1x1
+    res[i] <- node(weight_df, bias, vals[,i], FUN)
   }
   
   return(sum(res))
 }
 
-##right here is where our output changes to a 1 column dataframe, will need to be transposed to list for future layers
-layer <- function (df, FUN = sigmoid, weights, bias) {
-  res <- matrix(ncol=1, nrow=nrow(df))
-  for(i in 1:nrow(df)){
-    res[i,] <- layer_node(df[i,], FUN, weights, bias)
+# IN: 1x4, 5x1, 1x1
+# OUT: 5x1
+layer <- function (df, nodes, FUN = sigmoid, weight_df, bias) {
+  res <- matrix(ncol=1, nrow=nodes)
+  for(i in 1:nodes){
+    # IN: 1x4, 1x1, 1x1
+    # OUT: 1x1
+    res[i,] <- layer_node(df, FUN, weight_df[i,], bias)
   }
   return(data.frame(res))
-}
-```
-
-**Subsequent layers after layer 0
-```{r}
-layer_after_0 <- function (df, nodes, FUN = sigmoid, weights, bias) {
-  
-  res <- matrix(ncol=nrow(df), nrow=nodes)
-  for (i in 1:nodes) {
-    df_t <- t(df)
-    res[i,] <- df_t
-  }
-  return(layer(res, FUN, weights, bias))
 }
 ```
 
@@ -109,20 +110,10 @@ cost <- function(l){
 }
 ```
 
-
-**Build weights and bias df
-```{r}
-weights_bias_df <- function(df) {
-  return(data.frame(x1 = numeric(nrow(df) + 1)))
-}
-```
-
 **Random Initialization
 ```{r}
-rand_init <- function(df, bias_start) {
-  K <- nrow(df)
-  res <- data.frame(rnorm(K))
-  res[1,] <- bias_start
+rand_init <- function(K) {
+  res <- data.frame(abs(rnorm(K)))
   return(res)
 }
 ```
@@ -143,31 +134,40 @@ update <- function(weights, change, learn_rate) {
 ```{r}
 return <- as.data.frame(matrix(ncol=5, nrow=nrow(df_x)))
 
-## This is set up so that we can learn these weights and biases once the backprop function is implemented, for now I am stripping out bias and weights into seperate dfs
-weights_bias <- rand_init(weights_bias_df(df_x), 0.05)
-bias <- weights_bias[1,]
-weights <- weights_bias[2:nrow(weights_bias),]
-
-for (j in epochs:1) {
+layer_0_weights <- rand_init(5)
+layer_1_weights <- rand_init(10)
+layer_2_weights <- rand_init(10)
+layer_3_weights <- rand_init(1)
+for (j in 1:epochs) {
   for (i in 1:nrow(df_x)) {
-    layer_0 <- layer(df_x[i,], sigmoid, weights, bias)
-  
-    layer_1 <- layer_after_0(layer_0, 100, relu, weights, bias)
-
+    # IN: 1x4, 5x1, 1x1
+    # OUT: 5x1
+    layer_0 <- layer(df_x[i,], 5, sigmoid, layer_0_weights, bias)
+    layer_0_t <- t(layer_0)
+    # IN: 1x5, 10x1, 1x1
+    # OUT: 10x1
+    layer_1 <- layer(layer_0_t, 10, relu, layer_1_weights, bias)
+    # IN: 10x1
+    # OUT: 10x1
     layer_1_reg <- dropout(layer_1)
-
-    layer_2 <- layer_after_0(layer_1_reg, 10, tanh, weights, bias)
-    
+    layer_1_reg_t <- t(layer_1_reg)
+    # IN: 1x1, 10x1, 1x1
+    # OUT: 10x1
+    layer_2 <- layer(layer_1_reg_t, 10, tanh, layer_2_weights, bias)
+    # IN: 10x1
+    # OUT: 10x1
     layer_2_reg <- dropout(layer_2)
-
-    layer_3 <- layer_after_0(layer_2_reg, 1, sigmoid, weights, bias)
-  
+    layer_2_reg_t <- t(layer_2_reg)
+    # IN: 10x1, 1x1, 1x1
+    # OUT: 1x1
+    layer_3 <- layer(layer_2_reg_t, 1, sigmoid, layer_3_weights, bias)
+    
     return[i,j] <- loss(layer_3, df_y[i,])
   }
   
   c <- cost(return[,j])
   
-  weights <- update(weights, c, learning_rate)
+  weights_df[,j+1] <- update(weights_df[,j], c, learning_rate)
 }
 ```
 
