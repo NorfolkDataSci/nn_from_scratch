@@ -167,7 +167,10 @@ for (j in 1:epochs) {
   
   c <- cost(return[,j])
   
-  weights_df[,j+1] <- update(weights_df[,j], c, learning_rate)
+  layer_0_weights <- update(layer_0_weights, c, learning_rate)
+  layer_1_weights <- update(layer_1_weights, c, learning_rate)
+  layer_2_weights <- update(layer_2_weights, c, learning_rate)
+  layer_3_weights <- update(layer_3_weights, c, learning_rate)
 }
 ```
 
