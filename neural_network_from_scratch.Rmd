@@ -9,18 +9,26 @@ data("iris")
 
 iris_sub <- iris[ which(iris$Species == "setosa" | iris$Species == "virginica"), ]
 
-df_x  <- iris_sub[,(1:4)]
+iris_sub <- iris_sub[sample(nrow(iris_sub)),]
 
-df_y <- as.data.frame(iris_sub[,5])
+smp_size <- floor(0.75 * nrow(iris_sub))
+set.seed(123)
+train_ind <- sample(seq_len(nrow(iris_sub)), size = smp_size)
 
-df_y <- as.data.frame(df_y$`iris_sub[, 5]` == "setosa")
+train <- iris_sub[train_ind, ]
+test <- iris_sub[-train_ind, ]
+
+df_x  <- train[,(1:4)]
+
+df_y <- as.data.frame(train[,5])
+
+df_y <- as.data.frame(df_y$`train[, 5]` == "setosa")
 ```
 
 **Hyperparameters
 ```{r}
-learning_rate <- 0.008
-epochs <- 5
-bias <- 0.005
+learning_rate <- 0.5
+epochs <- 10
 ```
 
 **Various activation functions
@@ -138,6 +146,7 @@ layer_0_weights <- rand_init(5)
 layer_1_weights <- rand_init(10)
 layer_2_weights <- rand_init(10)
 layer_3_weights <- rand_init(1)
+bias <- 0.05
 for (j in 1:epochs) {
   for (i in 1:nrow(df_x)) {
     # IN: 1x4, 5x1, 1x1
