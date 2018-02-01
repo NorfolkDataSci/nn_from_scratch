@@ -28,23 +28,44 @@ df_y <- as.data.frame(df_y$`train[, 5]` == "setosa")
 **Hyperparameters
 ```{r}
 learning_rate <- 0.5
-epochs <- 10
+epochs <- 9
 ```
 
 **Various activation functions
 ```{r}
 sigmoid <- function (z) {
-  res <- 1 / (1 + exp(-1*z))
-  return(res)
+  return(1 / (1 + exp(-1*z)))
 }
 
 relu <- function (z) {
-  res <- max(0,z)
-  return(res)
+  return(max(0,z))
 }
 
 tanh <- function (z) {
-  res <- (exp(z) - exp(-1*z)) / (exp(z) + exp(-1*z))
+  return((exp(z) - exp(-1*z)) / (exp(z) + exp(-1*z)))
+}
+```
+
+**derivatives
+```{r}
+sigmoid_deriv <- function(z) {
+  return(exp(z) / ((exp(z) + 1)^2))
+}
+
+relu_deriv <- function(z) {
+  if (z < 0) {
+    return(0)
+  } else {
+    return(1)
+  }
+}
+
+tanh_deriv <- function(z) {
+  return(4 * exp(2 * z) / (exp(4 * z) + 2 * exp(2 * z) + 1))
+}
+
+loss_deriv <- function(y_hat, y) {
+  return(y_hat - y)
 }
 ```
 
@@ -60,11 +81,11 @@ dropout <- function (layer_output) {
 ```{r}
 # IN: 1x1, 1x1, 1x1
 # OUT: 1x1
-node <- function (w, b, x, FUN = sigmoid) {
-  z <- w * x + b
+node <- function (w, x) {
+  z <- w * x
   # IN: 1x1
   # OUT: 1x1
-  node_activation(z, FUN)
+  return(z)
 }
 
 # IN: 1x1
@@ -84,10 +105,10 @@ layer_node <- function (vals, FUN = sigmoid, weight_df, bias) {
   for(i in 1:ncol(vals)) {
     # IN: 1x1, 1x1, 1x1
     # OUT: 1x1
-    res[i] <- node(weight_df, bias, vals[,i], FUN)
+    res[i] <- node(weight_df, vals[,i])
   }
   
-  return(sum(res))
+  return(node_activation((sum(res) + bias), FUN))
 }
 
 # IN: 1x4, 5x1, 1x1
@@ -149,16 +170,22 @@ layer_3_weights <- rand_init(1)
 bias <- 0.05
 for (j in 1:epochs) {
   for (i in 1:nrow(df_x)) {
+    # Forward Prop
+    
     # IN: 1x4, 5x1, 1x1
     # OUT: 5x1
     layer_0 <- layer(df_x[i,], 5, sigmoid, layer_0_weights, bias)
+    # IN: 5x1
+    # OUT: 1x5
     layer_0_t <- t(layer_0)
     # IN: 1x5, 10x1, 1x1
     # OUT: 10x1
-    layer_1 <- layer(layer_0_t, 10, relu, layer_1_weights, bias)
+    layer_1 <- layer(layer_0_t, 10, tanh, layer_1_weights, bias)
     # IN: 10x1
     # OUT: 10x1
     layer_1_reg <- dropout(layer_1)
+    # IN: 10x1
+    # OUT: 1x10
     layer_1_reg_t <- t(layer_1_reg)
     # IN: 1x1, 10x1, 1x1
     # OUT: 10x1
@@ -166,12 +193,28 @@ for (j in 1:epochs) {
     # IN: 10x1
     # OUT: 10x1
     layer_2_reg <- dropout(layer_2)
+    # IN: 10x1
+    # OUT: 1x10
     layer_2_reg_t <- t(layer_2_reg)
     # IN: 10x1, 1x1, 1x1
     # OUT: 1x1
     layer_3 <- layer(layer_2_reg_t, 1, sigmoid, layer_3_weights, bias)
     
-    return[i,j] <- loss(layer_3, df_y[i,])
+    L <- loss(layer_3, df_y[i,])
+    
+    # Backward Prop
+    
+    l_b_prop <- loss_deriv(layer_3, df_y[i,])
+    
+    layer_3_b_prop <- layer(layer_2_reg_t, 1, sigmoid_deriv, layer_3_weights, bias)
+    
+    layer_2_b_prop <- layer(layer_1_reg_t, 10, tanh_deriv, layer_2_weights, bias)
+    
+    layer_1_b_prop <- layer(layer_0_t, 10, tanh_deriv, layer_1_weights, bias)
+    
+    layer_0_b_prop <- layer(df_x[i,], 5, sigmoid_deriv, layer_0_weights, bias)
+    
+    return[i,j] <- L
   }
   
   c <- cost(return[,j])
@@ -182,8 +225,3 @@ for (j in 1:epochs) {
   layer_3_weights <- update(layer_3_weights, c, learning_rate)
 }
 ```
-
-
-
-
-
