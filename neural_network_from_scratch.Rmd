@@ -1,9 +1,14 @@
 ---
 title: "NN From Scratch"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
+## Purpose
+### To show exactly what is going on in a simple binary classification naive neural network. It will be naive because in the real world I would be worried about performance, here I am not. I am simply trying to illustrate exactly how a neural network works with regards to the connections and mathematics, not necessarily the data structures.
 
-**Get data set
+## Get data set
+### First thing's first, I need a data set. For "training" purposes only I am using the iris data set that is built into R. Since I am going to start with a simple binary classification the dataset will be formatted as such.
 ```{r echo=TRUE}
 data("iris")
 
@@ -25,13 +30,30 @@ df_y <- as.data.frame(train[,5])
 df_y <- as.data.frame(df_y$`train[, 5]` == "setosa")
 ```
 
-**Hyperparameters
+## Hyperparameters
+### I'm putting all of the hyperparameters that I will be using here for ease of experimentation.
+
+### This is an ongoing project so there will be more here in the future.
 ```{r}
 learning_rate <- 0.5
 epochs <- 9
+dropout_percent <- 0.5
+rand_init_size <- .002
 ```
 
-**Various activation functions
+## Random Initialization
+### To break symmetry we must initilize the weights randomly
+
+### If we set the initial weights to the same thing the same signal would go to each node in the subsequent layers.
+```{r}
+rand_init <- function(K) {
+  res <- data.frame(abs(rnorm(K)) * rand_init_size)
+  return(res)
+}
+```
+
+## Activation functions
+### Here is where the various activation functions (more on this later) we can use will be housed, again for ease of experimentation.
 ```{r}
 sigmoid <- function (z) {
   return(1 / (1 + exp(-1*z)))
@@ -46,7 +68,8 @@ tanh <- function (z) {
 }
 ```
 
-**derivatives
+## Derivatives of activation functions
+### The derivatives of the activation functions are here for a similar reason. Note: These derivitives are used in the back propigation portion of a neural network and that is out of scope for this presntation, they are here only to provide context.
 ```{r}
 sigmoid_deriv <- function(z) {
   return(exp(z) / ((exp(z) + 1)^2))
@@ -69,15 +92,17 @@ loss_deriv <- function(y_hat, y) {
 }
 ```
 
-**Regularization functions
+## Regularization functions
+### There are various regularization functions, dropout being only one of them. Again in the future there will be others.
 ```{r}
 dropout <- function (layer_output) {
-  z <- rbinom(nrow(layer_output), 1, 0.5)
+  z <- rbinom(nrow(layer_output), 1, dropout_percent)
   return(z * layer_output)
 }
 ```
 
-**The two parts of each node
+## The two parts of each node
+### Each node has two parts, they are seperate here (in the code) for illustrative purposes only.
 ```{r}
 # IN: 1x1, 1x1, 1x1
 # OUT: 1x1
@@ -96,7 +121,8 @@ node_activation <- function(z, FUN){
 }
 ```
 
-**Layer of a NN
+## Layer of a NN
+### This is a layer of a neural network, here I've functionalized the parts of a layer, e.g. the layer itself and the node in the layer.
 ```{r}
 # IN: 1x4, 1x1, 1x1
 # OUT: 1x1
@@ -124,7 +150,8 @@ layer <- function (df, nodes, FUN = sigmoid, weight_df, bias) {
 }
 ```
 
-**Loss and Cost
+## Loss and Cost
+### Every neural network must have loss and cost.
 ```{r}
 loss <- function(y_hat, y){
   res <- 1 / 2 * (y_hat - y)^2
@@ -139,35 +166,26 @@ cost <- function(l){
 }
 ```
 
-**Random Initialization
-```{r}
-rand_init <- function(K) {
-  res <- data.frame(abs(rnorm(K)))
-  return(res)
-}
-```
-
-**Need to implement backprop
-```{r}
-
-```
-
-**Update weights function
+## Update weights
+### Here I've implemented a pseudo backprop which will be used to update the weights
 ```{r}
 update <- function(weights, change, learn_rate) {
   weights <- learn_rate*(weights - change)
 }
 ```
 
-**Implementation of a simple forward prop, with all observations and 5 epochs
+## Finally the Neural Network
+### This implementation uses all the variables and functions above.
 ```{r}
-return <- as.data.frame(matrix(ncol=5, nrow=nrow(df_x)))
+losses <- as.data.frame(matrix(ncol=5, nrow=nrow(df_x)))
+pred <- as.data.frame(matrix(ncol=5, nrow=nrow(df_x)))
 
 layer_0_weights <- rand_init(5)
 layer_1_weights <- rand_init(10)
 layer_2_weights <- rand_init(10)
 layer_3_weights <- rand_init(1)
 bias <- 0.05
+
 for (j in 1:epochs) {
   for (i in 1:nrow(df_x)) {
     # Forward Prop
@@ -198,26 +216,27 @@ for (j in 1:epochs) {
     layer_2_reg_t <- t(layer_2_reg)
     # IN: 10x1, 1x1, 1x1
     # OUT: 1x1
-    layer_3 <- layer(layer_2_reg_t, 1, sigmoid, layer_3_weights, bias)
+    layer_3 <- layer(layer_2_reg_t, 1, relu, layer_3_weights, bias)
     
     L <- loss(layer_3, df_y[i,])
     
-    # Backward Prop
+    # Backward Prop (This doesn't work yet)
+    # l_b_prop <- loss_deriv(layer_3, df_y[i,])
+    # 
+    # layer_3_b_prop <- layer(layer_2_reg_t, 1, sigmoid_deriv, layer_3_weights, bias)
+    # 
+    # layer_2_b_prop <- layer(layer_1_reg_t, 10, tanh_deriv, layer_2_weights, bias)
+    # 
+    # layer_1_b_prop <- layer(layer_0_t, 10, tanh_deriv, layer_1_weights, bias)
+    # 
+    # layer_0_b_prop <- layer(df_x[i,], 5, sigmoid_deriv, layer_0_weights, bias)
     
-    l_b_prop <- loss_deriv(layer_3, df_y[i,])
     
-    layer_3_b_prop <- layer(layer_2_reg_t, 1, sigmoid_deriv, layer_3_weights, bias)
-    
-    layer_2_b_prop <- layer(layer_1_reg_t, 10, tanh_deriv, layer_2_weights, bias)
-    
-    layer_1_b_prop <- layer(layer_0_t, 10, tanh_deriv, layer_1_weights, bias)
-    
-    layer_0_b_prop <- layer(df_x[i,], 5, sigmoid_deriv, layer_0_weights, bias)
-    
-    return[i,j] <- L
+    losses[i,j] <- L
+    pred[i,j] <- layer_3
   }
-  
-  c <- cost(return[,j])
+
+  c <- cost(losses[,j])
   
   layer_0_weights <- update(layer_0_weights, c, learning_rate)
   layer_1_weights <- update(layer_1_weights, c, learning_rate)
@@ -225,3 +244,11 @@ for (j in 1:epochs) {
   layer_3_weights <- update(layer_3_weights, c, learning_rate)
 }
 ```
+## Follow on steps
+### These are the things that still need to be done:
+- Finish backprop
+- Add ability to save this all of this training a proper model
+ + Last 2 layers of the network
+ + Trained weights for those layers
+ + Anciliary functions for connections
+- Proper scoring
