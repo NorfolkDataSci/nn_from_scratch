@@ -126,8 +126,8 @@ $(document).ready(function () {
 
 <div id="purpose" class="section level2">
 <h2>Purpose</h2>
-<div id="to-show-exactly-what-is-going-on-in-a-simple-binary-classification-naive-neural-network.-it-will-be-naive-because-in-the-real-world-i-would-be-worried-about-performance-here-i-am-not.-i-am-simply-trying-to-illustrate-exactly-how-a-neural-network-works-with-regards-to-the-connections-and-mathematics-not-necessarily-the-data-structures." class="section level3">
-<h3>To show exactly what is going on in a simple binary classification naive neural network. It will be naive because in the real world I would be worried about performance, here I am not. I am simply trying to illustrate exactly how a neural network works with regards to the connections and mathematics, not necessarily the data structures.</h3>
+<div id="to-show-exactly-what-is-going-on-in-a-simple-binary-classification-naive-neural-network.-it-will-be-naive-because-in-the-real-world-i-would-be-worried-about-performance-here-i-am-not.-i-am-simply-trying-to-illustrate-exactly-how-a-neural-network-works-with-regards-to-the-connections-and-mathematics-not-necessarily-the-data-structures.-i-am-not-using-any-libraries-so-as-not-to-obfuscate-anything." class="section level3">
+<h3>To show exactly what is going on in a simple binary classification naive neural network. It will be naive because in the real world I would be worried about performance, here I am not. I am simply trying to illustrate exactly how a neural network works with regards to the connections and mathematics, not necessarily the data structures. I am not using any libraries so as not to obfuscate anything.</h3>
 </div>
 </div>
 <div id="get-data-set" class="section level2">
@@ -151,7 +151,7 @@ df_x  &lt;- train[,(1:4)]
 
 df_y &lt;- as.data.frame(train[,5])
 
-df_y &lt;- as.data.frame(df_y$`train[, 5]` == &quot;setosa&quot;)</code></pre>
+df_y_bool &lt;- as.data.frame(df_y$`train[, 5]` == &quot;setosa&quot;)</code></pre>
 </div>
 </div>
 <div id="hyperparameters" class="section level2">
@@ -164,6 +164,7 @@ df_y &lt;- as.data.frame(df_y$`train[, 5]` == &quot;setosa&quot;)</code></pre>
 <pre class="r"><code>learning_rate &lt;- 0.5
 epochs &lt;- 9
 dropout_percent &lt;- 0.5
+bias &lt;- 0.05
 rand_init_size &lt;- .002</code></pre>
 </div>
 </div>
@@ -320,7 +321,6 @@ layer_0_weights &lt;- rand_init(5)
 layer_1_weights &lt;- rand_init(10)
 layer_2_weights &lt;- rand_init(10)
 layer_3_weights &lt;- rand_init(1)
-bias &lt;- 0.05
 
 for (j in 1:epochs) {
   for (i in 1:nrow(df_x)) {
@@ -354,7 +354,7 @@ for (j in 1:epochs) {
     # OUT: 1x1
     layer_3 &lt;- layer(layer_2_reg_t, 1, relu, layer_3_weights, bias)
     
-    L &lt;- loss(layer_3, df_y[i,])
+    L &lt;- loss(layer_3, df_y_bool[i,])
     
     # Backward Prop (This doesn't work yet)
     # l_b_prop &lt;- loss_deriv(layer_3, df_y[i,])

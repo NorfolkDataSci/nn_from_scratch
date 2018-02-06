@@ -5,7 +5,7 @@ output:
     df_print: paged
 ---
 ## Purpose
-### To show exactly what is going on in a simple binary classification naive neural network. It will be naive because in the real world I would be worried about performance, here I am not. I am simply trying to illustrate exactly how a neural network works with regards to the connections and mathematics, not necessarily the data structures.
+### To show exactly what is going on in a simple binary classification naive neural network. It will be naive because in the real world I would be worried about performance, here I am not. I am simply trying to illustrate exactly how a neural network works with regards to the connections and mathematics, not necessarily the data structures.  I am not using any libraries so as not to obfuscate anything.
 
 ## Get data set
 ### First thing's first, I need a data set. For "training" purposes only I am using the iris data set that is built into R. Since I am going to start with a simple binary classification the dataset will be formatted as such.
@@ -27,7 +27,7 @@ df_x  <- train[,(1:4)]
 
 df_y <- as.data.frame(train[,5])
 
-df_y <- as.data.frame(df_y$`train[, 5]` == "setosa")
+df_y_bool <- as.data.frame(df_y$`train[, 5]` == "setosa")
 ```
 
 ## Hyperparameters
@@ -38,6 +38,7 @@ df_y <- as.data.frame(df_y$`train[, 5]` == "setosa")
 learning_rate <- 0.5
 epochs <- 9
 dropout_percent <- 0.5
+bias <- 0.05
 rand_init_size <- .002
 ```
 
@@ -184,7 +185,6 @@ layer_0_weights <- rand_init(5)
 layer_1_weights <- rand_init(10)
 layer_2_weights <- rand_init(10)
 layer_3_weights <- rand_init(1)
-bias <- 0.05
 
 for (j in 1:epochs) {
   for (i in 1:nrow(df_x)) {
@@ -218,7 +218,7 @@ for (j in 1:epochs) {
     # OUT: 1x1
     layer_3 <- layer(layer_2_reg_t, 1, relu, layer_3_weights, bias)
     
-    L <- loss(layer_3, df_y[i,])
+    L <- loss(layer_3, df_y_bool[i,])
     
     # Backward Prop (This doesn't work yet)
     # l_b_prop <- loss_deriv(layer_3, df_y[i,])
