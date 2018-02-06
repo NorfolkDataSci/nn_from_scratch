@@ -11914,26 +11914,29 @@ a.anchor-link {
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="Terms">Terms<a class="anchor-link" href="#Terms">&#182;</a></h2><ul>
-<li>Forward Propagation: The forward cycle that the inputs, initial weights, and bias makes through the network</li>
-<li>Backward Propagation: The backward cycle used to learn the weights after the forward propagation “informs” the network how far off the predictions are.</li>
+<li>Forward Propagation: The forward cycle that the inputs, initial weights, and bias makes through the network to make a prediction</li>
+<li>Backward Propagation: The backward cycle used to learn the weights after the forward propagation “informs” the network how far off the predictions are (the loss).</li>
 <li>Epoch: How many times we are going to go through the training data.</li>
 <li>Weight: Multiplier for the x values that determine how much of their signal makes it to the next layer.</li>
 <li>Bias: How easy it is to get a node to fire</li>
 <li>Node: Smallest component of a layer, consists of two parts.</li>
 <li>Layer: Comprised of multiple nodes</li>
-<li>Regularization: Vaguely helps a model generalize</li>
-<li>Hyperparameters: As apposed to model parameters, e.g. weights. Not learnable through training the model.</li>
+<li>Regularization: Anything that helps a model generalize</li>
+<li>Hyperparameters: As opposed to model parameters, e.g. weights. Not learnable through training the model.</li>
+<li>Loss: The difference between the prediction the network makes for an observation and the ground truth for that same observation.</li>
 </ul>
 
 </div>
 </div>
-</div>
+</div></section></section><section><section>
 <div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Resources">Resources<a class="anchor-link" href="#Resources">&#182;</a></h2><p><a href="https://www.deeplearning.ai/">Andrew Ng's Deep Learning Course</a>
-<a href="http://pages.cs.wisc.edu/~bolo/shipyard/neural/local.html">University of Wisconsin</a></p>
+<h2 id="Resources">Resources<a class="anchor-link" href="#Resources">&#182;</a></h2><p><a href="https://www.deeplearning.ai/">Andrew Ng's Deep Learning Course</a><br/>
+<a href="http://pages.cs.wisc.edu/~bolo/shipyard/neural/local.html">University of Wisconsin</a><br/>
+<a href="http://parrt.cs.usfca.edu/doc/matrix-calculus/index.html">The Math</a><br/>
+<a href="http://course.fast.ai/">Fast AI Course</a></p>
 
 </div>
 </div>
@@ -11951,7 +11954,7 @@ a.anchor-link {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Purpose">Purpose<a class="anchor-link" href="#Purpose">&#182;</a></h2><h3 id="To-show-exactly-what-is-going-on-in-a-simple-binary-classification-naive-neural-network.-It-will-be-naive-because-in-the-real-world-I-would-be-worried-about-performance,-here-I-am-not.-I-am-simply-trying-to-illustrate-exactly-how-a-neural-network-works-with-regards-to-the-connections-and-the-intuition-of-the-mathematics,-not-necessarily-the-data-structures.--I-am-not-using-any-libraries-so-as-not-to-hide-any-functionality.-At-the-end-of-this-presentation-you-should-understand-the-basics-about-what-each-part-of-a-neural-network-is-doing.">To show exactly what is going on in a simple binary classification naive neural network. It will be naive because in the real world I would be worried about performance, here I am not. I am simply trying to illustrate exactly how a neural network works with regards to the connections and the intuition of the mathematics, not necessarily the data structures.  I am not using any libraries so as not to hide any functionality. At the end of this presentation you should understand the basics about what each part of a neural network is doing.<a class="anchor-link" href="#To-show-exactly-what-is-going-on-in-a-simple-binary-classification-naive-neural-network.-It-will-be-naive-because-in-the-real-world-I-would-be-worried-about-performance,-here-I-am-not.-I-am-simply-trying-to-illustrate-exactly-how-a-neural-network-works-with-regards-to-the-connections-and-the-intuition-of-the-mathematics,-not-necessarily-the-data-structures.--I-am-not-using-any-libraries-so-as-not-to-hide-any-functionality.-At-the-end-of-this-presentation-you-should-understand-the-basics-about-what-each-part-of-a-neural-network-is-doing.">&#182;</a></h3><h2 id="Get-data-set">Get data set<a class="anchor-link" href="#Get-data-set">&#182;</a></h2><h3 id="First-thing's-first,-I-need-a-data-set.-For-&quot;training&quot;-purposes-only-I-am-using-the-iris-data-set-that-is-built-into-R.-Since-I-am-going-to-start-with-a-simple-binary-classification-the-dataset-will-be-formatted-as-such.">First thing's first, I need a data set. For "training" purposes only I am using the iris data set that is built into R. Since I am going to start with a simple binary classification the dataset will be formatted as such.<a class="anchor-link" href="#First-thing's-first,-I-need-a-data-set.-For-&quot;training&quot;-purposes-only-I-am-using-the-iris-data-set-that-is-built-into-R.-Since-I-am-going-to-start-with-a-simple-binary-classification-the-dataset-will-be-formatted-as-such.">&#182;</a></h3>
+<h2 id="Purpose">Purpose<a class="anchor-link" href="#Purpose">&#182;</a></h2><h3 id="To-show-exactly-what-is-going-on-in-a-simple-binary-classification-&quot;naive&quot;-neural-network.-It-will-be-naive-because-in-the-real-world-I-would-be-worried-about-performance,-here-I-am-not.-I-am-simply-illustrating-exactly-how-a-neural-network-works-with-regards-to-the-connections-(and-a-bit-of-intuition-regarding-the-mathematics).--I-am-not-using-any-libraries-so-there-is-as-little-abstraction-as-possible.">To show exactly what is going on in a simple binary classification "naive" neural network. It will be naive because in the real world I would be worried about performance, here I am not. I am simply illustrating exactly how a neural network works with regards to the connections (and a bit of intuition regarding the mathematics).  I am not using any libraries so there is as little abstraction as possible.<a class="anchor-link" href="#To-show-exactly-what-is-going-on-in-a-simple-binary-classification-&quot;naive&quot;-neural-network.-It-will-be-naive-because-in-the-real-world-I-would-be-worried-about-performance,-here-I-am-not.-I-am-simply-illustrating-exactly-how-a-neural-network-works-with-regards-to-the-connections-(and-a-bit-of-intuition-regarding-the-mathematics).--I-am-not-using-any-libraries-so-there-is-as-little-abstraction-as-possible.">&#182;</a></h3><h2 id="Get-data-set">Get data set<a class="anchor-link" href="#Get-data-set">&#182;</a></h2><h3 id="First-thing's-first,-I-need-a-data-set.-For-&quot;training&quot;-purposes-only-I-am-using-the-iris-data-set-built-into-R.-Since-I-am-going-to-start-with-a-simple-binary-classification-the-dataset-will-be-formatted-as-such.">First thing's first, I need a data set. For "training" purposes only I am using the iris data set built into R. Since I am going to start with a simple binary classification the dataset will be formatted as such.<a class="anchor-link" href="#First-thing's-first,-I-need-a-data-set.-For-&quot;training&quot;-purposes-only-I-am-using-the-iris-data-set-built-into-R.-Since-I-am-going-to-start-with-a-simple-binary-classification-the-dataset-will-be-formatted-as-such.">&#182;</a></h3><h2 id="Why-Neural-Networks">Why Neural Networks<a class="anchor-link" href="#Why-Neural-Networks">&#182;</a></h2><h3 id="Ultimately-what-we-are-dealing-with-is-a-very-large-linear-function-and-our-goal-is-to-try-and-minimize-loss.">Ultimately what we are dealing with is a very large linear function and our goal is to try and minimize loss.<a class="anchor-link" href="#Ultimately-what-we-are-dealing-with-is-a-very-large-linear-function-and-our-goal-is-to-try-and-minimize-loss.">&#182;</a></h3>
 </div>
 </div>
 </div></section></section><section><section>
@@ -12020,7 +12023,7 @@ df_y_bool <span class="o">&lt;-</span> <span class="kp">as.data.frame</span><spa
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Hyperparameters">Hyperparameters<a class="anchor-link" href="#Hyperparameters">&#182;</a></h2><h3 id="I'm-putting-all-of-the-hyperparameters-that-I-will-be-using-here-for-ease-of-experimentation.--Technically-bias-is-not-a-hyperparameter-but-for-instructional-purposes-only-it-is-here.">I'm putting all of the hyperparameters that I will be using here for ease of experimentation.  Technically bias is not a hyperparameter but for instructional purposes only it is here.<a class="anchor-link" href="#I'm-putting-all-of-the-hyperparameters-that-I-will-be-using-here-for-ease-of-experimentation.--Technically-bias-is-not-a-hyperparameter-but-for-instructional-purposes-only-it-is-here.">&#182;</a></h3><h3 id="This-is-an-ongoing-project-so-there-will-be-more-here-in-the-future.">This is an ongoing project so there will be more here in the future.<a class="anchor-link" href="#This-is-an-ongoing-project-so-there-will-be-more-here-in-the-future.">&#182;</a></h3>
+<h2 id="Hyperparameters">Hyperparameters<a class="anchor-link" href="#Hyperparameters">&#182;</a></h2><h3 id="I'm-putting-all-of-the-hyperparameters-here-for-ease-of-experimentation.--Technically-bias-is-not-a-hyperparameter-but-for-instructional-purposes-only-it-is-here.">I'm putting all of the hyperparameters here for ease of experimentation.  Technically bias is not a hyperparameter but for instructional purposes only it is here.<a class="anchor-link" href="#I'm-putting-all-of-the-hyperparameters-here-for-ease-of-experimentation.--Technically-bias-is-not-a-hyperparameter-but-for-instructional-purposes-only-it-is-here.">&#182;</a></h3><h3 id="This-is-an-ongoing-project-so-there-will-be-more-here-in-the-future.">This is an ongoing project so there will be more here in the future.<a class="anchor-link" href="#This-is-an-ongoing-project-so-there-will-be-more-here-in-the-future.">&#182;</a></h3>
 </div>
 </div>
 </div></section><section>
@@ -12069,7 +12072,7 @@ rand_init_size <span class="o">&lt;-</span> <span class="m">.002</span>
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Activation-functions">Activation functions<a class="anchor-link" href="#Activation-functions">&#182;</a></h2><h3 id="Here-is-where-the-various-activation-functions-(more-on-this-later)-we-can-use-will-be-housed,-again-for-ease-of-experimentation.">Here is where the various activation functions (more on this later) we can use will be housed, again for ease of experimentation.<a class="anchor-link" href="#Here-is-where-the-various-activation-functions-(more-on-this-later)-we-can-use-will-be-housed,-again-for-ease-of-experimentation.">&#182;</a></h3>
+<h2 id="Activation-functions">Activation functions<a class="anchor-link" href="#Activation-functions">&#182;</a></h2><h3 id="These-are-some-of-the-various-activation-functions-(more-on-this-later)-we-can-use.">These are some of the various activation functions (more on this later) we can use.<a class="anchor-link" href="#These-are-some-of-the-various-activation-functions-(more-on-this-later)-we-can-use.">&#182;</a></h3>
 </div>
 </div>
 </div></section><section>
@@ -12100,7 +12103,7 @@ tanh <span class="o">&lt;-</span> <span class="kr">function</span> <span class="
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Derivatives-of-activation-functions">Derivatives of activation functions<a class="anchor-link" href="#Derivatives-of-activation-functions">&#182;</a></h2><h3 id="The-derivatives-of-the-activation-functions-are-here-for-a-similar-reason.-Note:-These-derivitives-are-used-in-the-back-propigation-portion-of-a-neural-network-and-that-is-out-of-scope-for-this-presntation,-they-are-here-only-to-provide-context.">The derivatives of the activation functions are here for a similar reason. Note: These derivitives are used in the back propigation portion of a neural network and that is out of scope for this presntation, they are here only to provide context.<a class="anchor-link" href="#The-derivatives-of-the-activation-functions-are-here-for-a-similar-reason.-Note:-These-derivitives-are-used-in-the-back-propigation-portion-of-a-neural-network-and-that-is-out-of-scope-for-this-presntation,-they-are-here-only-to-provide-context.">&#182;</a></h3>
+<h2 id="Derivatives-of-activation-functions">Derivatives of activation functions<a class="anchor-link" href="#Derivatives-of-activation-functions">&#182;</a></h2><h3 id="The-derivatives-of-the-activation-functions-are-here-for-a-similar-reason.-Note:-These-derivitives-are-used-in-the-back-propigation-portion-of-a-neural-network-and-that-is-out-of-scope-for-this-presentation,-they-are-here-only-to-provide-context.">The derivatives of the activation functions are here for a similar reason. Note: These derivitives are used in the back propigation portion of a neural network and that is out of scope for this presentation, they are here only to provide context.<a class="anchor-link" href="#The-derivatives-of-the-activation-functions-are-here-for-a-similar-reason.-Note:-These-derivitives-are-used-in-the-back-propigation-portion-of-a-neural-network-and-that-is-out-of-scope-for-this-presentation,-they-are-here-only-to-provide-context.">&#182;</a></h3>
 </div>
 </div>
 </div></section><section>
@@ -12164,6 +12167,15 @@ loss_deriv <span class="o">&lt;-</span> <span class="kr">function</span><span cl
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
 <h2 id="The-two-parts-of-each-node">The two parts of each node<a class="anchor-link" href="#The-two-parts-of-each-node">&#182;</a></h2><h3 id="Each-node-has-two-parts,-they-are-seperate-here-(in-the-code)-for-illustrative-purposes-only.">Each node has two parts, they are seperate here (in the code) for illustrative purposes only.<a class="anchor-link" href="#Each-node-has-two-parts,-they-are-seperate-here-(in-the-code)-for-illustrative-purposes-only.">&#182;</a></h3>
+</div>
+</div>
+</div></section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<p><img src="images/node.png"></p>
+
 </div>
 </div>
 </div></section><section>
@@ -12242,7 +12254,7 @@ layer <span class="o">&lt;-</span> <span class="kr">function</span> <span class=
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Loss-and-Cost">Loss and Cost<a class="anchor-link" href="#Loss-and-Cost">&#182;</a></h2><h3 id="Every-neural-network-must-have-loss-and-cost.">Every neural network must have loss and cost.<a class="anchor-link" href="#Every-neural-network-must-have-loss-and-cost.">&#182;</a></h3>
+<h2 id="Loss-and-Cost">Loss and Cost<a class="anchor-link" href="#Loss-and-Cost">&#182;</a></h2><h3 id="Every-neural-network-must-have-loss-and-cost.--Remember-loss-is-what-we-are-trying-to-minimize.">Every neural network must have loss and cost.  Remember loss is what we are trying to minimize.<a class="anchor-link" href="#Every-neural-network-must-have-loss-and-cost.--Remember-loss-is-what-we-are-trying-to-minimize.">&#182;</a></h3>
 </div>
 </div>
 </div></section><section>
@@ -12273,7 +12285,7 @@ cost <span class="o">&lt;-</span> <span class="kr">function</span><span class="p
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h2 id="Update-weights">Update weights<a class="anchor-link" href="#Update-weights">&#182;</a></h2><h3 id="Here-I've-implemented-a-pseudo-backprop-which-will-be-used-to-update-the-weights">Here I've implemented a pseudo backprop which will be used to update the weights<a class="anchor-link" href="#Here-I've-implemented-a-pseudo-backprop-which-will-be-used-to-update-the-weights">&#182;</a></h3>
+<h2 id="Update-weights">Update weights<a class="anchor-link" href="#Update-weights">&#182;</a></h2><h3 id="Here-we-are-going-to-update-the-weights-based-on-the-change-and-the-learning-rate">Here we are going to update the weights based on the change and the learning rate<a class="anchor-link" href="#Here-we-are-going-to-update-the-weights-based-on-the-change-and-the-learning-rate">&#182;</a></h3>
 </div>
 </div>
 </div></section><section>
